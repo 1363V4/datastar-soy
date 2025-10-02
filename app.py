@@ -3,6 +3,7 @@ import os
 import uuid
 import json
 import redis.asyncio as redis
+import logging
 
 from sanic import Sanic, html
 from pathlib import Path
@@ -25,6 +26,9 @@ app = Sanic(__name__)
 app.static('/static/', './static/')
 app.static('/videos/', './videos/', name="videos")
 app.static('/', './index.html', name="index")
+
+logger = logging.getLogger(__name__)
+logging.basicConfig(filename='perso.log', encoding='utf-8', level=logging.DEBUG)
 
 # Redis client for pub/sub
 redis_client = redis.Redis(host='localhost', port=6379, db=0, decode_responses=True)
@@ -51,17 +55,20 @@ async def status_updates(request):
     videos_root = Path("videos")
     items = []
     for vid_dir in sorted(videos_root.iterdir()):
-        vid_id = vid_dir.name
-        thumb_path = f"/videos/{vid_id}/frame_00.jpg"
-        frames_json = vid_dir / 'frames.json'
-        data = json.loads(frames_json.read_text())
-        name = data['db_details']['1']['name']
-        items.append(f"<a href='/v/{vid_id}' class='gc'><img src='{thumb_path}' alt='{name}'><span>{name}</span></a>")
-    gallery_html = f"""
-    <div id='gallery'>
-        {''.join(items)}
-    </div>
-    """
+        try:
+            vid_id = vid_dir.name
+            frames_json = vid_dir / 'frames.json'
+            data = json.loads(frames_json.read_text())
+            name = data['db_details']['1']['name']
+            thumb_path = f"/videos/{vid_id}/frame_00.jpg"
+            items.append(f"<a href='/v/{vid_id}' class='gc'><img src='{thumb_path}' alt='{name}'><span>{name}</span></a>")
+        except Exception:
+            pass
+        gallery_html = f"""
+        <div id='gallery'>
+            {''.join(items)}
+        </div>
+        """
     yield SSE.patch_elements(gallery_html)
 
     user_id = request.cookies.get('user_id')
@@ -103,7 +110,7 @@ async def process(request):
 
     asyncio.create_task(process_video(video_url, user_id, quality))
 
-    return
+    return SSE.patch_elements('<div id="form">got it chief</div>')
 
 
 @app.get("/v/<id>")

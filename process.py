@@ -9,7 +9,10 @@ from scipy.cluster.vq import kmeans, vq
 from tinydb import TinyDB
 import json
 import redis.asyncio as redis
+import logging
 
+
+logger = logging.getLogger(__name__)
 
 # Ensure Windows event loop supports subprocesses
 if os.name == 'nt':
