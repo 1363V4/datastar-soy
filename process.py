@@ -24,23 +24,29 @@ if os.name == 'nt':
 
 async def _run_subprocess(cmd):
     try:
+        logger.info("mep")
         process = await asyncio.create_subprocess_exec(
             *cmd,
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.PIPE,
         )
+        logger.info("meep")
         stdout, stderr = await process.communicate()
+        logger.info("meeep")
         if process.returncode != 0:
             raise subprocess.CalledProcessError(process.returncode, cmd, stdout.decode(), stderr.decode())
         return subprocess.CompletedProcess(cmd, process.returncode, stdout.decode(), stderr.decode())
     except NotImplementedError:
+        logger.info("mop")
         # Fallback for environments/loops that don't support asyncio subprocess (e.g., some Windows loops)
         def _run_blocking():
             result = subprocess.run(cmd, capture_output=True, text=True)
             if result.returncode != 0:
                 raise subprocess.CalledProcessError(result.returncode, cmd, result.stdout, result.stderr)
             return result
+        logger.info("moop")
         result = await asyncio.to_thread(_run_blocking)
+        logger.info("mooop")
         return subprocess.CompletedProcess(cmd, result.returncode, result.stdout, result.stderr)
 
 
@@ -56,6 +62,7 @@ async def download_video(url, output_path, quality="360p"):
     await _run_subprocess(cmd)
 
 async def get_video_info(url):
+    logger.info("there")
     cmd = [
         'yt-dlp',
         '-J',
@@ -63,6 +70,7 @@ async def get_video_info(url):
         url
     ]
     result = await _run_subprocess(cmd)
+    logger.info("there2")
     data = json.loads(result.stdout)
 
     duration = int(data.get('duration', 0))

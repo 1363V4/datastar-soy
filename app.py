@@ -110,7 +110,7 @@ async def process(request):
 
     asyncio.create_task(process_video(video_url, user_id, quality))
 
-    return SSE.patch_elements('<div id="form">got it chief, one moment</div>')
+    return SSE.patch_elements('<div id="form">yes it chief, one moment</div>')
 
 
 @app.get("/v/<id>")
