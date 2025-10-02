@@ -176,6 +176,7 @@ async def build_page(folder_path, video_url, details, frames):
         raise
 
 async def process_video(video_url, user_id=None, quality="360p"):
+    logger.debug("okkkkkkkkkkk")
     folder_id = str(uuid.uuid4())
     videos_root = Path("videos")
     videos_root.mkdir(exist_ok=True)
@@ -184,6 +185,7 @@ async def process_video(video_url, user_id=None, quality="360p"):
     
     # Redis client for pub/sub updates (async)
     redis_client = redis.Redis(host='localhost', port=6379, db=0, decode_responses=True)
+    logger.debug("okkkkkkkkkkk2")
     
     async def publish_update(message):
         if user_id:
@@ -191,7 +193,9 @@ async def process_video(video_url, user_id=None, quality="360p"):
     
     try:
         await publish_update({"status": "fetching_metadata", "message": "Getting video info...", "progress": 5})
+        logger.debug("okkkkkkkkkkk3")
         meta = await get_video_info(video_url)
+        logger.debug("okkkkkkkkkkk4")
         duration = meta['duration_seconds']
         title = meta['title']
         canonical_url = meta['url']
@@ -265,6 +269,6 @@ async def process_video(video_url, user_id=None, quality="360p"):
         }
         await publish_update(details)
 
-if __name__ == '__main__':
-    video_url = "https://www.youtube.com/watch?v=yIL9wLxG01M"
-    asyncio.run(process_video(video_url))
+# if __name__ == '__main__':
+#     video_url = "https://www.youtube.com/watch?v=yIL9wLxG01M"
+#     asyncio.run(process_video(video_url))
