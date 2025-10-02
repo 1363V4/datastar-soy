@@ -45,6 +45,7 @@ async def _run_subprocess(cmd):
 
 
 async def download_video(url, output_path, quality="360p"):
+    logger.info("here")
     cmd = [
         'yt-dlp',
         '-f', f'best[height<={quality}][ext=mp4]/best[height<={quality}]/best',

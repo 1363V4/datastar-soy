@@ -12,3 +12,4 @@ wheels/
 # Other
 videos/
 *.exe
+*.log
