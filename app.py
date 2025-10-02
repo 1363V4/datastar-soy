@@ -27,8 +27,8 @@ app.static('/static/', './static/')
 app.static('/videos/', './videos/', name="videos")
 app.static('/', './index.html', name="index")
 
-logger = logging.getLogger(__name__)
 logging.basicConfig(filename='perso.log', encoding='utf-8', level=logging.DEBUG)
+logger = logging.getLogger(__name__)
 
 # Redis client for pub/sub
 redis_client = redis.Redis(host='localhost', port=6379, db=0, decode_responses=True)
@@ -110,7 +110,7 @@ async def process(request):
 
     asyncio.create_task(process_video(video_url, user_id, quality))
 
-    return SSE.patch_elements('<div id="form">got it chief</div>')
+    return SSE.patch_elements('<div id="form">got it chief, one moment</div>')
 
 
 @app.get("/v/<id>")
