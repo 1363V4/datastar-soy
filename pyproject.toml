@@ -6,5 +6,10 @@ readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
     "datastar-py>=0.6.5",
+    "pillow>=11.3.0",
+    "redis>=5.0.0",
     "sanic>=25.3.0",
+    "scipy>=1.16.2",
+    "tinydb>=4.8.2",
+    "yt-dlp>=2025.9.26",
 ]

@@ -1,1 +1,59 @@
+@import url(https://fonts.googleapis.com/css?family=Lato:400,700,400italic,700italic&subset=latin);
 @import url("gold.css") layer(gold);
+
+:root {
+    --m: 1.2rem;
+}
+
+body {
+    font-family: 'Lato', Arial, Helvetica, sans-serif;
+    margin-bottom: var(--m);
+}
+
+input {
+    width: 100%;
+}
+
+#status {
+    display: grid;
+    place-items: center;
+}
+
+#gallery {
+    display: grid;
+    grid-template-columns: 1fr;
+    column-gap: var(--xxl);
+    row-gap: var(--m);
+    img {
+        width: 10rem;
+    }
+}
+
+@media (min-width: 768px) {
+    #gallery {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+.frames {
+    display: flex;
+    flex-wrap: nowrap;
+    height: 10rem;
+}
+
+.frames div {
+    width: 2rem;
+    div {
+        width: 100%;
+    }
+    img {
+        display: none;
+        width: 15rem;
+        place-self: center;
+    }
+    &:hover {
+        img {
+            display: block;
+        }
+    }
+}

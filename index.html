@@ -3,12 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>datastart</title>
+    <title>SOY</title>
     <link rel="icon" href="/static/img/rocket.png">
     <link rel="stylesheet" href="/static/css/site.css">
     <script type="module" src="/static/js/datastar.js"></script>
 </head>
-<body class="gf gc" data-on-load="@get('/load')">
-    <img src="/static/img/rocket.png">
-    <span id="time"></span>
+<body class="gc">
+    <h1 class="gt-xl gm-xl">the shape of youtube</h1>
+    <form 
+    data-on-submit="@post('/process', {contentType: 'form'})"
+    class="gc gm-l">
+        <label for="url-input">URL here</label>
+        <input type="text" id="url-input" name="url" class="gm-m" required>
+        <button type="submit">Submit</button>
+    </form>
+    <div data-on-load="@get('/status_updates')"></div>
+    <div id="status"></div>
+    <h2 class="gt-l gm-xl">Gallery</h2>
+    <div id="gallery"></div>
 </body>
+</html>
