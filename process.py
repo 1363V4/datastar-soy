@@ -89,7 +89,7 @@ async def extract_frames(video_path, folder_path, interval=3, scale_width=320):
     ]
     await _run_subprocess(cmd)
 
-async def analyze_frame_colors(image_path, k=7):
+async def analyze_frame_colors(image_path, k=2):
     def _work():
         img = Image.open(image_path).convert('RGB')
         pixels = np.array(img)
@@ -192,8 +192,8 @@ async def process_video(video_url, user_id=None, quality="360p"):
         duration = meta['duration_seconds']
         title = meta['title']
         canonical_url = meta['url']
-#        if duration <= 0 or duration > 60:
-#            raise ValueError("Invalid or unsupported video duration (must be between 1 and 60 seconds)")
+        if duration <= 0 or duration > 60:
+            raise ValueError("Invalid or unsupported video duration (must be between 1 and 60 seconds)")
 
         await publish_update({"status": "downloading", "message": f"Downloading {title} in {quality}...", "progress": 15})
         video_path = folder_path / 'video.mp4'
