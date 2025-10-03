@@ -24,53 +24,34 @@ if os.name == 'nt':
 
 async def _run_subprocess(cmd):
     try:
-        logger.info("mep")
         process = await asyncio.create_subprocess_exec(
             *cmd,
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.PIPE,
         )
-        logger.info("meep")
         stdout, stderr = await process.communicate()
-        logger.info("meeep")
         if process.returncode != 0:
             raise subprocess.CalledProcessError(process.returncode, cmd, stdout.decode(), stderr.decode())
         return subprocess.CompletedProcess(cmd, process.returncode, stdout.decode(), stderr.decode())
     except NotImplementedError:
-        logger.info("mop")
         # Fallback for environments/loops that don't support asyncio subprocess (e.g., some Windows loops)
         def _run_blocking():
             result = subprocess.run(cmd, capture_output=True, text=True)
             if result.returncode != 0:
                 raise subprocess.CalledProcessError(result.returncode, cmd, result.stdout, result.stderr)
             return result
-        logger.info("moop")
         result = await asyncio.to_thread(_run_blocking)
-        logger.info("mooop")
         return subprocess.CompletedProcess(cmd, result.returncode, result.stdout, result.stderr)
 
-
-async def download_video(url, output_path, quality="360p"):
-    logger.info("here")
-    cmd = [
-        'yt-dlp',
-        '-f', f'best[height<={quality}][ext=mp4]/best[height<={quality}]/best',
-        '--merge-output-format', 'mp4',
-        '-o', str(output_path),
-        url
-    ]
-    await _run_subprocess(cmd)
-
 async def get_video_info(url):
-    logger.info("there")
     cmd = [
         'yt-dlp',
         '-J',
+        '--cookies', 'cookies.txt',
         '--skip-download',
         url
     ]
     result = await _run_subprocess(cmd)
-    logger.info("there2")
     data = json.loads(result.stdout)
 
     duration = int(data.get('duration', 0))
@@ -82,6 +63,17 @@ async def get_video_info(url):
         'title': title,
         'url': webpage_url,
     }
+
+async def download_video(url, output_path, quality="360p"):
+    cmd = [
+        'yt-dlp',
+        '-f', f'best[height<={quality}][ext=mp4]/best[height<={quality}]/best',
+        '--merge-output-format', 'mp4',
+        '--cookies', 'cookies.txt',
+        '-o', str(output_path),
+        url
+    ]
+    await _run_subprocess(cmd)
 
 async def extract_frames(video_path, folder_path, interval=3, scale_width=320):
     output_pattern = folder_path / 'frame_%02d.jpg'
@@ -97,7 +89,7 @@ async def extract_frames(video_path, folder_path, interval=3, scale_width=320):
     ]
     await _run_subprocess(cmd)
 
-async def analyze_frame_colors(image_path, k=2):
+async def analyze_frame_colors(image_path, k=7):
     def _work():
         img = Image.open(image_path).convert('RGB')
         pixels = np.array(img)
@@ -128,8 +120,6 @@ async def build_page(folder_path, video_url, details, frames):
 
     name = details[0].get('name') if details else 'Video ?!'
     url = details[0].get('url') if details else video_url
-
-    print(f"Building page for '{name}' with {len(frames)} frames...")
 
     frames_list = []
     for frame in frames:
@@ -178,13 +168,11 @@ async def build_page(folder_path, video_url, details, frames):
         final_path = folder_path / 'video.html'
         tmp_path.write_text(HTML, encoding='utf-8')
         os.replace(tmp_path, final_path)
-        print(f"Wrote page: {final_path}")
     except Exception as e:
-        print(f"Failed writing video.html: {e}")
         raise
 
 async def process_video(video_url, user_id=None, quality="360p"):
-    logger.debug("okkkkkkkkkkk")
+    logger.info(f"user {user_id} requested {video_url}")
     folder_id = str(uuid.uuid4())
     videos_root = Path("videos")
     videos_root.mkdir(exist_ok=True)
@@ -193,7 +181,6 @@ async def process_video(video_url, user_id=None, quality="360p"):
     
     # Redis client for pub/sub updates (async)
     redis_client = redis.Redis(host='localhost', port=6379, db=0, decode_responses=True)
-    logger.debug("okkkkkkkkkkk2")
     
     async def publish_update(message):
         if user_id:
@@ -201,14 +188,12 @@ async def process_video(video_url, user_id=None, quality="360p"):
     
     try:
         await publish_update({"status": "fetching_metadata", "message": "Getting video info...", "progress": 5})
-        logger.debug("okkkkkkkkkkk3")
         meta = await get_video_info(video_url)
-        logger.debug("okkkkkkkkkkk4")
         duration = meta['duration_seconds']
         title = meta['title']
         canonical_url = meta['url']
-        if duration <= 0 or duration > 60:
-            raise ValueError("Invalid or unsupported video duration (must be between 1 and 60 seconds)")
+#        if duration <= 0 or duration > 60:
+#            raise ValueError("Invalid or unsupported video duration (must be between 1 and 60 seconds)")
 
         await publish_update({"status": "downloading", "message": f"Downloading {title} in {quality}...", "progress": 15})
         video_path = folder_path / 'video.mp4'
@@ -276,7 +261,3 @@ async def process_video(video_url, user_id=None, quality="360p"):
             "progress": 100
         }
         await publish_update(details)
-
-# if __name__ == '__main__':
-#     video_url = "https://www.youtube.com/watch?v=yIL9wLxG01M"
-#     asyncio.run(process_video(video_url))

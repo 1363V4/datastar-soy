@@ -33,10 +33,6 @@ logger = logging.getLogger(__name__)
 # Redis client for pub/sub
 redis_client = redis.Redis(host='localhost', port=6379, db=0, decode_responses=True)
 
-# @app.before_server_start
-# async def setup_ctx(app):
-#     app.ctx.cwd = Path.cwd()
-
 @app.after_server_stop
 async def close_db(app):
     await redis_client.aclose()
@@ -64,11 +60,11 @@ async def status_updates(request):
             items.append(f"<a href='/v/{vid_id}' class='gc'><img src='{thumb_path}' alt='{name}'><span>{name}</span></a>")
         except Exception:
             pass
-        gallery_html = f"""
-        <div id='gallery'>
-            {''.join(items)}
-        </div>
-        """
+    gallery_html = f"""
+    <div id='gallery'>
+        {''.join(items)}
+    </div>
+    """
     yield SSE.patch_elements(gallery_html)
 
     user_id = request.cookies.get('user_id')
@@ -110,7 +106,7 @@ async def process(request):
 
     asyncio.create_task(process_video(video_url, user_id, quality))
 
-    return SSE.patch_elements('<div id="form">yes it chief, one moment</div>')
+    return SSE.patch_elements('<div id="form">yes chief, one moment</div>')
 
 
 @app.get("/v/<id>")
@@ -128,4 +124,7 @@ async def video_page(request, id):
 
 
 if __name__ == "__main__":
-    app.run(debug=True, auto_reload=True, access_log=False)
+    app.run(
+    dev=False, 
+    unix='soy.sock',
+    access_log=False)
