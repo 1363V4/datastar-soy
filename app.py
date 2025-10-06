@@ -125,6 +125,7 @@ async def video_page(request, id):
 
 if __name__ == "__main__":
     app.run(
-    dev=False, 
+    debug=False,
+    auto_reload=True,
     unix='soy.sock',
     access_log=False)

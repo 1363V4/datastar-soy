@@ -151,11 +151,11 @@
 	.gm-xl { margin: var(--xl); }
 	.gm-xxl { margin: var(--xxl); }
 
-	.gt-xxs { font-size: var(--xxs); }
-	.gt-xs { font-size: var(--xs); }
-	.gt-s  { font-size: var(--s); }
-	.gt-m  { font-size: var(--m); }
-	.gt-l  { font-size: var(--l); }
-	.gt-xl { font-size: var(--xl); }
-	.gt-xxl { font-size: var(--xxl); }
+	.gt-xxs { font-size: var(--xxs); line-height: var(--xxs); }
+	.gt-xs  { font-size: var(--xs);  line-height: var(--xs); }
+	.gt-s   { font-size: var(--s);   line-height: var(--s); }
+	.gt-m   { font-size: var(--m);   line-height: var(--m); }
+	.gt-l   { font-size: var(--l);   line-height: var(--l); }
+	.gt-xl  { font-size: var(--xl);  line-height: var(--xl); }
+	.gt-xxl { font-size: var(--xxl); line-height: var(--xxl); }
 }

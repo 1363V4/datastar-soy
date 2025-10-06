@@ -10,6 +10,7 @@ from tinydb import TinyDB
 import json
 import redis.asyncio as redis
 import logging
+import colorsys
 
 
 logger = logging.getLogger(__name__)
@@ -126,21 +127,31 @@ async def build_page(folder_path, video_url, details, frames):
         clusters = frame.get('analysis', [])
         frame_file_name = frame.get('frame_name', "no name ?!")
         img_src = f"/videos/{folder_path.name}/{frame_file_name}"
-        if len(clusters) < 2:
-            continue
-        c1 = clusters[0].get('color_rgb', [0, 0, 0])
-        p1 = clusters[0].get('percentage', 50)
-        c2 = clusters[1].get('color_rgb', [0, 0, 0])
-        p2 = clusters[1].get('percentage', 50)
+        
+        color_bars = ""
+        
+        def rgb_to_hsl(rgb):
+            r, g, b = [x / 255.0 for x in rgb]
+            h, l, s = colorsys.rgb_to_hls(r, g, b)
+            return (h, s, l)
+
+        sorted_clusters = sorted(clusters, key=lambda cluster: cluster.get('percentage', 0))
+        sorted_clusters = sorted(clusters, key=lambda cluster: rgb_to_hsl(cluster.get('color_rgb', [0, 0, 0])))
+
+        for cluster in sorted_clusters:
+            color = cluster.get('color_rgb', [0, 0, 0])
+            percent = cluster.get('percentage', 0)
+            color_bars += f'<div style="{rgb_style(color)}; height: {percent}%"></div>\n'
         frames_list.append(
             f'''
 <div>
-    <div style="{rgb_style(c1)}; height: {p1}%"></div>
-    <div style="{rgb_style(c2)}; height: {p2}%"></div>
-    <img src="{img_src}"></img>
+    {color_bars}<img src="{img_src}"></img>
 </div>
 '''
         )
+    
+    frames_count = len(frames_list)
+    columns = frames_count if frames_count > 0 else 1
 
     HTML = f'''
 <!DOCTYPE html>
@@ -156,7 +167,7 @@ async def build_page(folder_path, video_url, details, frames):
 <body class="gc">
     <h1 class="gt-xl gm-xl"><a href="{url}">{name}</a></h1>
     <article class="gc">
-        <div class="frames">
+        <div class="frames" style="grid-template-columns: repeat({columns}, 1fr)">
             {"".join(frames_list)}
         </div>
     </article>
@@ -221,7 +232,7 @@ async def process_video(video_url, user_id=None, quality="360p"):
         if len(frame_files) == 0:
             raise ValueError("No frames were extracted from the video") 
 
-        await publish_update({"status": "analyzing", "message": f"Analyzing {len(frame_files)} frames...", "progress": 50})
+        await publish_update({"status": "analyzing", "message": f"Analyzing {len(frame_files)} frames...", "progress": 40})
         total_frames = len(frame_files)
         for index, frame_path in enumerate(frame_files, start=1):
             frame_name = frame_path.name
@@ -231,7 +242,7 @@ async def process_video(video_url, user_id=None, quality="360p"):
                 'analysis': analysis
             }
             await asyncio.to_thread(db_frames.insert, entry)
-            # Update progress between 50 and 90 during analysis
+
             analyze_progress = 50 + int(40 * (index / total_frames))
             await publish_update({
                 "status": "analyzing",
@@ -240,7 +251,7 @@ async def process_video(video_url, user_id=None, quality="360p"):
             })
 
         details = db_details.all()
-        frames = db_frames.all()
+        frames = sorted(db_frames.all(), key=lambda f: f.get('frame_name', ''))
         await publish_update({"status": "building_page", "message": "Generating HTML page...", "progress": 95})
         await build_page(folder_path, video_url, details, frames)
 
